@@ -28,8 +28,8 @@ async def download_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
   with tempfile.TemporaryDirectory() as output_path:
     selected_format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]"
 
-    # Check if cookies.json exists in the repository
-    cookies_path = "cookies.json"
+    # Updated to look for cookies.txt instead of cookies.json
+    cookies_path = "cookies.txt"
     has_cookies = os.path.exists(cookies_path)
 
     ydl_opts = {
