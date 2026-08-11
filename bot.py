@@ -1,8 +1,30 @@
 import os
+import subprocess
 import tempfile
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-import yt_dlp
+
+
+# Automatically upgrade yt-dlp on startup to prevent YouTube bot blocks
+def upgrade_ytdlp():
+  print("Checking for yt-dlp updates...")
+  try:
+    subprocess.run(
+        ["pip", "install", "--upgrade", "yt-dlp"],
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    print("yt-dlp is up to date.")
+  except Exception as e:
+    print(f"Warning: Could not auto-upgrade yt-dlp: {e}")
+
+
+# Run the upgrade before importing yt-dlp or starting the bot
+upgrade_ytdlp()
+
+import yt_dlp  # Import yt-dlp after the upgrade runs
 
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 
@@ -28,7 +50,6 @@ async def download_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
   with tempfile.TemporaryDirectory() as output_path:
     selected_format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]"
 
-    # Updated to look for cookies.txt instead of cookies.json
     cookies_path = "cookies.txt"
     has_cookies = os.path.exists(cookies_path)
 
@@ -39,7 +60,6 @@ async def download_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "noplaylist": True,
     }
 
-    # Pass cookies if available to prevent bot blocks
     if has_cookies:
       ydl_opts["cookiefile"] = cookies_path
 
