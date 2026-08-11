@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 
-# Automatically upgrade yt-dlp on startup to prevent YouTube bot blocks
+# Automatically upgrade yt-dlp on startup to ensure latest YouTube fixes
 def upgrade_ytdlp():
   print("Checking for yt-dlp updates...")
   try:
@@ -16,15 +16,15 @@ def upgrade_ytdlp():
         stderr=subprocess.PIPE,
         text=True,
     )
-    print("yt-dlp is up to date.")
+    print("yt-dlp check complete.")
   except Exception as e:
     print(f"Warning: Could not auto-upgrade yt-dlp: {e}")
 
 
-# Run the upgrade before importing yt-dlp or starting the bot
+# Run upgrade before loading yt-dlp
 upgrade_ytdlp()
 
-import yt_dlp  # Import yt-dlp after the upgrade runs
+import yt_dlp
 
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 
@@ -62,6 +62,9 @@ async def download_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if has_cookies:
       ydl_opts["cookiefile"] = cookies_path
+      print("Using cookies.txt for authentication.")
+    else:
+      print("Warning: cookies.txt not found in directory!")
 
     try:
       with yt_dlp.YoutubeDL(ydl_opts) as ydl:
