@@ -15,32 +15,46 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def download_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
   if not context.args:
-    await update.message.reply_text("Please provide a URL. Example: /download <URL>")
+    await update.message.reply_text(
+        "Please provide a URL. Example: /download <URL>"
+    )
     return
 
   url = context.args[0]
-  await update.message.reply_text(f"Starting process for: {url}\nPlease wait...")
+  await update.message.reply_text(
+      f"Starting process for: {url}\nPlease wait..."
+  )
 
   with tempfile.TemporaryDirectory() as output_path:
-    selected_format = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]'
+    selected_format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]"
+
+    # Check if cookies.json exists in the repository
+    cookies_path = "cookies.json"
+    has_cookies = os.path.exists(cookies_path)
 
     ydl_opts = {
-        'format': selected_format,
-        'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
-        'merge_output_format': 'mp4',
-        'noplaylist': True,
+        "format": selected_format,
+        "outtmpl": os.path.join(output_path, "%(title)s.%(ext)s"),
+        "merge_output_format": "mp4",
+        "noplaylist": True,
     }
+
+    # Pass cookies if available to prevent bot blocks
+    if has_cookies:
+      ydl_opts["cookiefile"] = cookies_path
 
     try:
       with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         filename = ydl.prepare_filename(info)
         base, _ = os.path.splitext(filename)
-        final_file = base + '.mp4'
+        final_file = base + ".mp4"
 
-      await update.message.reply_text("Download complete! Uploading to Telegram...")
+      await update.message.reply_text(
+          "Download complete! Uploading to Telegram..."
+      )
 
-      with open(final_file, 'rb') as video:
+      with open(final_file, "rb") as video:
         await update.message.reply_video(video=video)
 
     except Exception as e:
